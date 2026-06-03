@@ -1,0 +1,187 @@
+// AasaMedChem — B2B Chemical Marketplace data model
+// Quantities are ALWAYS stored in the smallest unit (g, mL, unit).
+// Prices are ALWAYS stored per smallest unit. Decimal(20,8), never Float.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum Dimension {
+  WEIGHT
+  VOLUME
+  COUNT
+}
+
+enum Unit {
+  G
+  KG
+  ML
+  L
+  UNIT
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REJECTED
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum RequestStatus {
+  OPEN
+  REVIEWING
+  FULFILLED
+  CLOSED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(BUYER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sellerProfile SellerProfile?
+  buyerProfile  BuyerProfile?
+
+  @@map("users")
+}
+
+model SellerProfile {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName     String
+  gstNumber       String?
+  description     String?
+  address         String?
+  contactNumber   String?
+  deliveryTime    String?
+  deliveryRegions String?
+  status          SellerStatus @default(PENDING)
+  joinedAt        DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  products Product[]
+  orders   Order[]
+
+  @@map("seller_profiles")
+}
+
+model BuyerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName   String?
+  contactNumber String?
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders           Order[]
+  chemicalRequests ChemicalRequest[]
+
+  @@map("buyer_profiles")
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  sellerId         String
+  seller           SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name             String
+  sku              String        @unique
+  category         String
+  description      String?
+  image            String?
+  dimension        Dimension
+  baseUnit         Unit
+  inventoryInBase  Decimal       @default(0) @db.Decimal(20, 8)
+  pricePerBaseUnit Decimal       @db.Decimal(20, 8)
+  minimumOrderQty  Decimal       @default(1) @db.Decimal(20, 8)
+  leadTime         String?
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([name])
+  @@index([category])
+  @@index([sellerId])
+  @@map("products")
+}
+
+model Order {
+  id         String        @id @default(cuid())
+  buyerId    String
+  buyer      BuyerProfile  @relation(fields: [buyerId], references: [id])
+  sellerId   String
+  seller     SellerProfile @relation(fields: [sellerId], references: [id])
+  status     OrderStatus   @default(PENDING)
+  totalPrice Decimal       @db.Decimal(20, 8)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  items OrderItem[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String  @id @default(cuid())
+  orderId           String
+  order             Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product @relation(fields: [productId], references: [id])
+  productName       String
+  enteredQuantity   Decimal @db.Decimal(20, 8)
+  enteredUnit       Unit
+  convertedQuantity Decimal @db.Decimal(20, 8)
+  calculatedPrice   Decimal @db.Decimal(20, 8)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model ChemicalRequest {
+  id                String        @id @default(cuid())
+  buyerId           String
+  buyer             BuyerProfile  @relation(fields: [buyerId], references: [id])
+  chemicalName      String
+  requestedQuantity Decimal       @db.Decimal(20, 8)
+  requestedUnit     Unit
+  notes             String?
+  deliveryLocation  String?
+  status            RequestStatus @default(OPEN)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([status])
+  @@map("chemical_requests")
+}
