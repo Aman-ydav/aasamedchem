@@ -32,7 +32,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn("h-full antialiased", inter.variable, geistMono.variable, "font-sans")}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-background text-foreground"
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

@@ -22,9 +22,14 @@ export default async function BuyerOverview() {
         title={`Hello, ${user.name ?? "buyer"}`}
         description="Track your orders, quotations, and chemical requests."
         action={
-          <Button asChild>
-            <Link href="/products">Browse marketplace</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/buyer/profile">My profile</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/products">Browse marketplace</Link>
+            </Button>
+          </div>
         }
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

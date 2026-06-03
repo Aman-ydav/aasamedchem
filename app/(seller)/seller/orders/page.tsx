@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireSellerProfile } from "@/lib/seller";
 import { db } from "@/lib/db";
 import { toNum, formatINR } from "@/lib/format";
@@ -33,7 +34,12 @@ export default async function SellerOrdersPage() {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">
-                      {order.buyer.companyName ?? "Buyer"}
+                      <Link
+                        href={`/seller/buyers/${order.buyer.id}`}
+                        className="hover:underline"
+                      >
+                        {order.buyer.companyName ?? "Buyer"}
+                      </Link>
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Order #{order.id.slice(-8)} ·{" "}

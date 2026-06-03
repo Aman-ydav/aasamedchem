@@ -20,7 +20,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function LoginForm() {
+export function LoginForm({
+  callbackUrl = "/dashboard",
+}: {
+  callbackUrl?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const {
@@ -34,14 +38,18 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     setLoading(true);
-    const res = await signIn("credentials", { ...values, redirect: false });
+    const res = await signIn("credentials", {
+      ...values,
+      redirect: false,
+      callbackUrl,
+    });
     setLoading(false);
     if (res?.error) {
       toast.error("Invalid email or password");
       return;
     }
     toast.success("Welcome back");
-    router.push("/dashboard");
+    router.push(res?.url ?? callbackUrl);
     router.refresh();
   }
 

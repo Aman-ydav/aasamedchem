@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/stat-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,11 @@ export default async function AdminUsersPage() {
           <TableBody>
             {users.map((u) => (
               <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link href={`/admin/users/${u.id}`} className="hover:underline">
+                    {u.name}
+                  </Link>
+                </TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>
                   <Badge variant={ROLE_VARIANT[u.role]}>{u.role}</Badge>

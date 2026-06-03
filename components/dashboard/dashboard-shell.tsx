@@ -36,6 +36,7 @@ const NAV: Record<Role, NavItem[]> = {
   ],
   BUYER: [
     { href: "/buyer", label: "Overview", icon: LayoutDashboard },
+    { href: "/buyer/profile", label: "My Profile", icon: UserCog },
     { href: "/buyer/orders", label: "My Orders", icon: ShoppingCart },
     { href: "/buyer/requests", label: "My Requests", icon: ClipboardList },
     { href: "/buyer/request-chemical", label: "Request a Chemical", icon: FlaskConical },
