@@ -30,6 +30,7 @@ export async function SiteHeader() {
             <UserMenu
               name={user.name}
               email={user.email}
+              role={user.role}
               dashboardHref={dashboardPath(user.role)}
             />
           ) : (

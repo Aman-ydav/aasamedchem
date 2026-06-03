@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { LogOut, LayoutDashboard, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,10 +17,12 @@ import {
 export function UserMenu({
   name,
   email,
+  role,
   dashboardHref,
 }: {
   name?: string | null;
   email?: string | null;
+  role?: string | null;
   dashboardHref: string;
 }) {
   return (
@@ -36,6 +39,11 @@ export function UserMenu({
             <span className="truncate text-xs font-normal text-muted-foreground">
               {email}
             </span>
+          )}
+          {role && (
+            <Badge variant="secondary" className="mt-2 w-fit">
+              {role}
+            </Badge>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

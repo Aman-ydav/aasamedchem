@@ -36,8 +36,9 @@ export function QuotationCalculator(props: {
   pricePerBaseUnit: number;
   inventoryInBase: number;
   minimumOrderQty: number;
+  canOrder: boolean;
 }) {
-  const { dimension, pricePerBaseUnit, inventoryInBase, minimumOrderQty } = props;
+  const { dimension, pricePerBaseUnit, inventoryInBase, minimumOrderQty, canOrder } = props;
   const units = unitsForDimension(dimension);
   const [qty, setQty] = useState("1");
   const [unit, setUnit] = useState<Unit>(SELL_UNIT[dimension]);
@@ -62,7 +63,7 @@ export function QuotationCalculator(props: {
     }
   }, [qty, unit, pricePerBaseUnit, dimension, inventoryInBase, minimumOrderQty]);
 
-  const canAdd = !!result && result.inStock && result.aboveMin;
+  const canAdd = !!result && result.inStock && result.aboveMin && canOrder;
 
   function onAdd() {
     if (!result) return;
@@ -142,14 +143,30 @@ export function QuotationCalculator(props: {
           </p>
         )}
 
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAdd} disabled={!canAdd}>
-            <ShoppingCart className="size-4" /> Add to quote
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/buyer/cart">View cart</Link>
-          </Button>
-        </div>
+        {canOrder ? (
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={onAdd} disabled={!canAdd}>
+              <ShoppingCart className="size-4" /> Add to quote
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/buyer/cart">View cart</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            Only buyers can place orders. You can still view pricing and product details.
+            <div className="mt-3 flex gap-2">
+              <Button asChild size="sm">
+                <Link href={`/login?callbackUrl=${encodeURIComponent(`/product/${props.productId}`)}`}>
+                  Log in as buyer
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/register">Create buyer account</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

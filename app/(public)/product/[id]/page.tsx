@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FlaskConical, Store } from "lucide-react";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/rbac";
 import { toNum } from "@/lib/format";
 import { formatBaseQuantity, DIMENSION_LABEL } from "@/lib/conversion-engine";
 import { QuotationCalculator } from "@/components/marketplace/quotation-calculator";
@@ -19,6 +20,9 @@ export default async function ProductDetailPage({
     include: { seller: true },
   });
   if (!product) notFound();
+
+  const user = await getCurrentUser();
+  const canOrder = user?.role === "BUYER";
 
   const details = [
     { label: "SKU", value: product.sku },
@@ -94,6 +98,7 @@ export default async function ProductDetailPage({
             pricePerBaseUnit={toNum(product.pricePerBaseUnit)}
             inventoryInBase={toNum(product.inventoryInBase)}
             minimumOrderQty={toNum(product.minimumOrderQty)}
+            canOrder={canOrder}
           />
         </div>
       </div>
