@@ -1,12 +1,9 @@
-import Link from "next/link";
-import { requireBuyerProfile } from "@/lib/buyer";
+import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { toNum } from "@/lib/format";
 import { formatQuantity } from "@/lib/conversion-engine";
 import { PageHeader } from "@/components/dashboard/stat-card";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,32 +12,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RequestStatusControl } from "@/components/admin/request-status-control";
 
-export default async function BuyerRequestsPage() {
-  const { profile } = await requireBuyerProfile();
+export default async function AdminRequestsPage() {
+  await requireRole("ADMIN");
   const requests = await db.chemicalRequest.findMany({
-    where: { buyerId: profile.id },
     orderBy: { createdAt: "desc" },
+    include: { buyer: { select: { companyName: true } } },
   });
 
   return (
     <div>
       <PageHeader
-        title="My Requests"
-        description="Chemicals you've asked the platform to source."
-        action={
-          <Button asChild>
-            <Link href="/buyer/request-chemical">New request</Link>
-          </Button>
-        }
+        title="Chemical Requests"
+        description="Buyer requests for chemicals not yet on the marketplace."
       />
-
       {requests.length === 0 ? (
-        <Card className="p-10 text-center">
-          <p className="text-muted-foreground">No requests yet.</p>
-          <Button asChild className="mt-4">
-            <Link href="/buyer/request-chemical">Request a chemical</Link>
-          </Button>
+        <Card className="p-10 text-center text-muted-foreground">
+          No chemical requests yet.
         </Card>
       ) : (
         <Card className="overflow-hidden">
@@ -49,9 +38,10 @@ export default async function BuyerRequestsPage() {
               <TableRow>
                 <TableHead>Chemical</TableHead>
                 <TableHead>Quantity</TableHead>
+                <TableHead>Buyer</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -61,10 +51,15 @@ export default async function BuyerRequestsPage() {
                   <TableCell>
                     {formatQuantity(toNum(r.requestedQuantity), r.requestedUnit)}
                   </TableCell>
+                  <TableCell>{r.buyer.companyName ?? "—"}</TableCell>
                   <TableCell>{r.deliveryLocation ?? "—"}</TableCell>
-                  <TableCell>{r.createdAt.toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{r.status}</Badge>
+                  <TableCell className="max-w-[220px] truncate text-muted-foreground">
+                    {r.notes ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end">
+                      <RequestStatusControl id={r.id} status={r.status} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

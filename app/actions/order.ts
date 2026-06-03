@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireBuyerProfile } from "@/lib/buyer";
+import { requireRole } from "@/lib/rbac";
 import { toNum } from "@/lib/format";
 import { quote, hasStock, meetsMinimum } from "@/lib/quotation-engine";
 import { isUnitValidForDimension } from "@/lib/conversion-engine";
 import { placeOrderSchema } from "@/lib/validations/order";
+import type { OrderStatus } from "@/lib/generated/prisma/enums";
 
 /**
  * Creates orders from a buyer's cart. Everything is recomputed server-side from
@@ -88,4 +90,55 @@ export async function placeOrder(rawItems: unknown) {
   revalidatePath("/buyer/orders");
   revalidatePath("/seller/orders");
   return { success: true as const, orders: groups.size };
+}
+
+/**
+ * Updates an order's status. Sellers may only touch their own orders; admins
+ * may touch any. Approving a PENDING order atomically decrements inventory for
+ * every line, failing the whole transaction if any item is short on stock.
+ */
+export async function updateOrderStatus(orderId: string, status: OrderStatus) {
+  const user = await requireRole(["SELLER", "ADMIN"]);
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order) return { error: "Order not found" };
+
+  if (user.role === "SELLER") {
+    const sp = await db.sellerProfile.findUnique({ where: { userId: user.id } });
+    if (!sp || sp.id !== order.sellerId) return { error: "This isn't your order" };
+  }
+
+  const decrementsStock = status === "APPROVED" && order.status === "PENDING";
+
+  try {
+    if (decrementsStock) {
+      await db.$transaction(async (tx) => {
+        for (const item of order.items) {
+          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          if (!product) continue;
+          const remaining = toNum(product.inventoryInBase) - toNum(item.convertedQuantity);
+          if (remaining < 0) {
+            throw new Error(`Insufficient stock for ${item.productName}`);
+          }
+          await tx.product.update({
+            where: { id: product.id },
+            data: { inventoryInBase: remaining },
+          });
+        }
+        await tx.order.update({ where: { id: orderId }, data: { status } });
+      });
+    } else {
+      await db.order.update({ where: { id: orderId }, data: { status } });
+    }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not update the order" };
+  }
+
+  revalidatePath("/seller/orders");
+  revalidatePath("/buyer/orders");
+  revalidatePath("/admin/orders");
+  revalidatePath("/seller/inventory");
+  return { success: true as const };
 }

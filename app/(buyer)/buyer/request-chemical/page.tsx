@@ -1,16 +1,16 @@
+import { requireBuyerProfile } from "@/lib/buyer";
 import { PageHeader } from "@/components/dashboard/stat-card";
-import { Card } from "@/components/ui/card";
+import { RequestForm } from "@/components/buyer/request-form";
 
-export default function RequestChemicalPage() {
+export default async function RequestChemicalPage() {
+  await requireBuyerProfile();
   return (
     <div>
       <PageHeader
         title="Request a Chemical"
-        description="Can't find what you need? Ask the platform to source it."
+        description="Can't find what you need in the marketplace? Tell us and our team will source it."
       />
-      <Card className="p-10 text-center text-muted-foreground">
-        The request form arrives with the chemical request feature.
-      </Card>
+      <RequestForm />
     </div>
   );
 }
