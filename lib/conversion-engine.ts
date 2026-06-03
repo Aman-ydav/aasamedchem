@@ -36,6 +36,18 @@ export const BASE_UNIT: Record<Dimension, Unit> = {
   COUNT: "UNIT",
 };
 
+/** The natural "selling" unit sellers/buyers think in, per dimension. */
+export const SELL_UNIT: Record<Dimension, Unit> = {
+  WEIGHT: "KG",
+  VOLUME: "L",
+  COUNT: "UNIT",
+};
+
+/** Convert a per-base-unit price into a per-selling-unit price (e.g. ₹/mL -> ₹/L). */
+export function pricePerSellUnit(pricePerBase: number, dimension: Dimension): number {
+  return pricePerBase * UNIT_TABLE[SELL_UNIT[dimension]].factorToBase;
+}
+
 export const DIMENSION_LABEL: Record<Dimension, string> = {
   WEIGHT: "Weight",
   VOLUME: "Volume",
