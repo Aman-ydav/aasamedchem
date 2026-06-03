@@ -62,7 +62,8 @@ export function unitsForDimension(dimension: Dimension): Unit[] {
 }
 
 export function unitLabel(unit: Unit): string {
-  return UNIT_TABLE[unit].label;
+  const meta = UNIT_TABLE[unit];
+  return meta?.label ?? String(unit ?? "unit").toLowerCase();
 }
 
 export function dimensionOf(unit: Unit): Dimension {
