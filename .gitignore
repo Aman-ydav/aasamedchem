@@ -41,7 +41,10 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+<<<<<<< HEAD
 
 # agent / skill tooling artifacts
 /.agents/
 /skills-lock.json
+=======
+>>>>>>> d4121131e2215362feffc5b96ef6ff01c50bc5ab
